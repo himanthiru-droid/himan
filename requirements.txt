@@ -1,0 +1,7 @@
+streamlit
+pandas
+pyotp
+requests
+python-dotenv
+logzero
+SmartApi
