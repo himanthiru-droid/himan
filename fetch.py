@@ -4,14 +4,20 @@ import pyotp
 import requests
 import streamlit as st
 from dotenv import load_dotenv
-from SmartApi import SmartConnect
 from logzero import logger
 from datetime import datetime
+
+# Import SmartConnect assuming local SmartApi folder or file exists in same directory
+try:
+    from SmartApi import SmartConnect
+except ImportError:
+    st.error("SmartApi module not found. Please ensure SmartApi folder or SmartApi.py exists in the project directory.")
+    st.stop()
 
 # Streamlit app title
 st.title("Angel One NIFTY Option Chain Fetcher")
 
-# Load env variables
+# Load environment variables
 load_dotenv()
 APIKEY = os.getenv("APIKEY")
 CLIENTID = os.getenv("CLIENTID")
@@ -98,6 +104,15 @@ def main():
             filtered.to_csv(csv_filename, index=False)
             st.success(f"Option chain data saved to {csv_filename}")
             st.dataframe(filtered)
+
+            # Provide the download button for Android or other devices
+            with open(csv_filename, "rb") as file:
+                st.download_button(
+                    label="Download Option Chain CSV",
+                    data=file,
+                    file_name=csv_filename,
+                    mime="text/csv"
+                )
 
         try:
             smartApi.terminateSession(CLIENTID)
