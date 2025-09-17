@@ -1,32 +1,28 @@
-import os
 import pandas as pd
 import pyotp
 import requests
 import streamlit as st
-from dotenv import load_dotenv
 from logzero import logger
 from datetime import datetime
 
-# Import SmartConnect assuming local SmartApi folder or file exists in same directory
+# Import SmartConnect from local mock SmartApi.py
 try:
     from SmartApi import SmartConnect
 except ImportError:
-    st.error("SmartApi module not found. Please ensure SmartApi folder or SmartApi.py exists in the project directory.")
+    st.error("SmartApi module not found. Please ensure SmartApi.py exists in the project directory.")
     st.stop()
 
 # Streamlit app title
-st.title("Angel One NIFTY Option Chain Fetcher")
+st.title("Angel One NIFTY Option Chain Fetcher (Mock)")
 
-# Load environment variables
-load_dotenv()
-APIKEY = os.getenv("APIKEY")
-CLIENTID = os.getenv("CLIENTID")
-PASSWORD = os.getenv("PASSWORD")
-MPIN = os.getenv("MPIN")
-TOTPSECRET = os.getenv("TOTPSECRET")
+# Load API credentials from Streamlit secrets
+APIKEY = st.secrets.get("APIKEY")
+CLIENTID = st.secrets.get("CLIENTID")
+MPIN = st.secrets.get("MPIN")
+TOTPSECRET = st.secrets.get("TOTPSECRET")
 
-if not all([APIKEY, CLIENTID, PASSWORD, MPIN, TOTPSECRET]):
-    st.error("Please set all required environment variables: APIKEY, CLIENTID, PASSWORD, MPIN, TOTPSECRET")
+if not all([APIKEY, CLIENTID, MPIN, TOTPSECRET]):
+    st.error("Please set all required secrets: APIKEY, CLIENTID, MPIN, TOTPSECRET")
     st.stop()
 
 @st.cache_data(show_spinner=False)
@@ -34,7 +30,7 @@ def generate_session():
     try:
         totp = pyotp.TOTP(TOTPSECRET).now()
         smartApi = SmartConnect(APIKEY)
-        data = smartApi.generateSession(CLIENTID, PASSWORD, totp)
+        data = smartApi.generateSession(CLIENTID, MPIN, totp)
         if not data["status"]:
             logger.error(f"Login failed: {data}")
             return None, "Login failed"
@@ -105,7 +101,6 @@ def main():
             st.success(f"Option chain data saved to {csv_filename}")
             st.dataframe(filtered)
 
-            # Provide the download button for Android or other devices
             with open(csv_filename, "rb") as file:
                 st.download_button(
                     label="Download Option Chain CSV",
